@@ -1,3 +1,8 @@
+{% if nginx_load_modules is defined %}
+{% for module in nginx_load_modules %}
+load_module {{ module }};
+{% endfor %}
+{% endif %}
 user  {{ nginx_user }};
 
 error_log  {{ nginx_error_log }};
