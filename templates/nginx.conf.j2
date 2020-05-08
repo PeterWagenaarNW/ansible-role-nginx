@@ -85,30 +85,30 @@ http {
     {% block http_end %}{% endblock %}
 }
 
-{% if nginx_ssl_preread_server_name or nginx_ssl_preread_alpn_protocols or nginx_ssl_preread_protocol %}
+{% if nginx_ssl_preread_server_name is defined or nginx_ssl_preread_alpn_protocols is defined or nginx_ssl_preread_protocol is defined %}
 stream {
 
-{% if nginx_ssl_preread_server_name %}
+{% if nginx_ssl_preread_server_name is defined %}
 
     map $ssl_preread_server_name $name {
-    {% for server in nginx_ssl_preread_server_name %}
-    {{ server.name }}       {{ server.alias }};
-    {% endfor %}
+{% for server in nginx_ssl_preread_server_name %}
+        {{ server.name }}    {{ server.alias }};
+{% endfor %}
     }
 
-    {% for upstream in nginx_stream_upstreams %}
-        upstream {{ upstream.name }} {
-    {% if upstream.strategy is defined %}
-            {{ upstream.strategy }};
-    {% endif %}
-    {% for server in upstream.servers %}
-            server {{ server }};
-    {% endfor %}
-    {% if upstream.keepalive is defined %}
-            keepalive {{ upstream.keepalive }};
-    {% endif %}
-        }
-    {% endfor %}
+{% for upstream in nginx_stream_upstreams %}
+    upstream {{ upstream.name }} {
+{% if upstream.strategy is defined %}
+        {{ upstream.strategy }};
+{% endif %}
+{% for server in upstream.servers %}
+        server {{ server }};
+{% endfor %}
+{% if upstream.keepalive is defined %}
+        keepalive {{ upstream.keepalive }};
+{% endif %}
+    }
+{% endfor %}
 
     server {
         listen      {{ nginx_stream_server }};
@@ -119,13 +119,12 @@ stream {
 {% endif %}
 
 
-{% if nginx_ssl_preread_alpn_protocols %}
+{% if nginx_ssl_preread_alpn_protocols is defined %}
 
     map $ssl_preread_alpn_protocols $proxy {
-    {% for protocol in nginx_ssl_preread_alpn_protocols %}
-    {{ protocol }}      {{ protocol.upstream }};
-    {% endfor %}
-    }
+{% for protocol in nginx_ssl_preread_alpn_protocols %}
+    {{ protocol }}    {{ protocol.upstream }};
+{% endfor %}}
 
     server {
         listen      {{ nginx_stream_server }};
@@ -136,12 +135,12 @@ stream {
 {% endif %}
 
 
-{% if nginx_ssl_preread_protocol %}
+{% if nginx_ssl_preread_protocol is defined %}
 
     map $ssl_preread_protocol $upstream {
-    {% for protocol_version in ssl_preread_protocol %}
-    {{ protocol_version }}      {{ protocol_version.upstream }};
-    {% endfor %}
+{% for protocol_version in ssl_preread_protocol %}
+    {{ protocol_version }}    {{ protocol_version.upstream }};
+{% endfor %}
     }
 
     server {
