@@ -79,3 +79,74 @@ http {
 
     {% block http_end %}{% endblock %}
 }
+
+{% if nginx_ssl_preread_server_name or nginx_ssl_preread_alpn_protocols or nginx_ssl_preread_protocol %}
+stream {
+
+{% if nginx_ssl_preread_server_name %}
+
+    map $ssl_preread_server_name $name {
+    {% for server_name in nginx_ssl_preread_server_name %}
+    {{ server_name }}       {{ backend.alias }};
+    {% endfor %}
+    }
+
+    {% for upstream in nginx_stream_upstreams %}
+        upstream {{ upstream.name }} {
+    {% if upstream.strategy is defined %}
+            {{ upstream.strategy }};
+    {% endif %}
+    {% for server in upstream.servers %}
+            server {{ server }};
+    {% endfor %}
+    {% if upstream.keepalive is defined %}
+            keepalive {{ upstream.keepalive }};
+    {% endif %}
+        }
+    {% endfor %}
+
+    server {
+        listen      {{ nginx_stream_server }};
+        proxy_pass  $name;
+        ssl_preread on;
+    }
+
+{% endif %}
+
+
+{% if nginx_ssl_preread_alpn_protocols %}
+
+    map $ssl_preread_alpn_protocols $proxy {
+    {% for protocol in nginx_ssl_preread_alpn_protocols %}
+    {{ protocol }}      {{ protocol.upstream }};
+    {% endfor %}
+    }
+
+    server {
+        listen      {{ nginx_stream_server }};
+        proxy_pass  $proxy;
+        ssl_preread on;
+    }
+
+{% endif %}
+
+
+{% if nginx_ssl_preread_protocol %}
+
+    map $ssl_preread_protocol $upstream {
+    {% for protocol_version in ssl_preread_protocol %}
+    {{ protocol_version }}      {{ protocol_version.upstream }};
+    {% endfor %}
+    }
+
+    server {
+        listen      {{ nginx_stream_server }};
+        proxy_pass  $upstream;
+        ssl_preread on;
+    }
+
+{% endif %}
+
+}
+
+{% endif %}
