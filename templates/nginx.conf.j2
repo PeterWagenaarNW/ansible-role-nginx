@@ -86,8 +86,8 @@ stream {
 {% if nginx_ssl_preread_server_name %}
 
     map $ssl_preread_server_name $name {
-    {% for server_name in nginx_ssl_preread_server_name %}
-    {{ server_name }}       {{ backend.alias }};
+    {% for server in nginx_ssl_preread_server_name %}
+    {{ server.name }}       {{ server.alias }};
     {% endfor %}
     }
 
